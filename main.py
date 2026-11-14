@@ -1,42 +1,27 @@
-"""Decode entry.png.b64 and write entry.png into MAKEFUN_OUTPUT_DIR (default /output).
+#!/usr/bin/env python3
+"""make.fun news-image-01 round 3 entry program.
 
-Standard library only, no network access, no directory creation. The image is
-carried as base64 in entry.png.b64 next to this script. Deterministic.
+Writes the front-page image to /output/entry.png. The image is stored
+in this repo as base64 (entry.png.b64), so the program is fully
+deterministic and needs no network: it only decodes and writes.
+Standard library only; no directories are created (the grader
+provides /output).
 """
-
 import base64
-import binascii
 import os
-import sys
 
-B64_NAME = "entry.png.b64"
-OUT_NAME = "entry.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(HERE, "entry.png.b64")
+DST = "/output/entry.png"
 
 
 def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(script_dir, B64_NAME), "rb") as f:
-        try:
-            data = base64.b64decode(f.read(), validate=False)
-        except (binascii.Error, ValueError) as exc:
-            sys.stderr.write("error: %s is not valid base64 (%s); nothing written\n"
-                             % (B64_NAME, exc))
-            return 1
-
-    if not (data.startswith(b"\x89PNG") or data.startswith(b"\xff\xd8\xff")):
-        sys.stderr.write(
-            "error: %s did not decode to PNG (89 50 4E 47) or JPEG (FF D8 FF) "
-            "data; nothing written\n" % B64_NAME
-        )
-        return 1
-
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
-    with open(os.path.join(out_dir, OUT_NAME), "wb") as f:
-        f.write(data)
-
-    print("wrote %d bytes to %s" % (len(data), os.path.join(out_dir, OUT_NAME)))
-    return 0
+    with open(SRC, "rb") as f:
+        payload = base64.b64decode(f.read())
+    with open(DST, "wb") as f:
+        f.write(payload)
+    print("wrote %s (%d bytes)" % (DST, len(payload)))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
